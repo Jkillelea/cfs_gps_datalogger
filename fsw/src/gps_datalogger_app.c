@@ -73,7 +73,7 @@ GPS_DATALOGGER_AppData_t  g_GPS_DATALOGGER_AppData;
 /*
 ** Local Function Definitions
 */
-    
+
 /*=====================================================================================
 ** Name: GPS_DATALOGGER_InitEvent
 **
@@ -108,7 +108,7 @@ GPS_DATALOGGER_AppData_t  g_GPS_DATALOGGER_AppData;
 ** Algorithm:
 **    Psuedo-code or description of basic algorithm
 **
-** Author(s):  Jacob Killelea 
+** Author(s):  Jacob Killelea
 **
 ** History:  Date Written  2019-08-29
 **           Unit Tested   yyyy-mm-dd
@@ -146,7 +146,7 @@ int32 GPS_DATALOGGER_InitEvent()
 
     return (iStatus);
 }
-    
+
 /*=====================================================================================
 ** Name: GPS_DATALOGGER_InitPipe
 **
@@ -190,7 +190,7 @@ int32 GPS_DATALOGGER_InitEvent()
 ** Algorithm:
 **    Psuedo-code or description of basic algorithm
 **
-** Author(s):  Jacob Killelea 
+** Author(s):  Jacob Killelea
 **
 ** History:  Date Written  2019-08-29
 **           Unit Tested   yyyy-mm-dd
@@ -217,7 +217,7 @@ int32 GPS_DATALOGGER_InitPipe()
             CFE_ES_WriteToSysLog("GPS_DATALOGGER - Sch Pipe failed to subscribe to GPS_DATALOGGER_WAKEUP_MID. (0x%08X)\n", iStatus);
             goto GPS_DATALOGGER_InitPipe_Exit_Tag;
         }
-        
+
     }
     else
     {
@@ -252,7 +252,7 @@ int32 GPS_DATALOGGER_InitPipe()
             CFE_ES_WriteToSysLog("GPS_DATALOGGER - CMD Pipe failed to subscribe to GPS_DATALOGGER_SEND_HK_MID. (0x%08X)\n", iStatus);
             goto GPS_DATALOGGER_InitPipe_Exit_Tag;
         }
-        
+
     }
     else
     {
@@ -300,7 +300,7 @@ int32 GPS_DATALOGGER_InitPipe()
 GPS_DATALOGGER_InitPipe_Exit_Tag:
     return (iStatus);
 }
-    
+
 /*=====================================================================================
 ** Name: GPS_DATALOGGER_InitData
 **
@@ -336,7 +336,7 @@ GPS_DATALOGGER_InitPipe_Exit_Tag:
 ** Algorithm:
 **    Psuedo-code or description of basic algorithm
 **
-** Author(s):  Jacob Killelea 
+** Author(s):  Jacob Killelea
 **
 ** History:  Date Written  2019-08-29
 **           Unit Tested   yyyy-mm-dd
@@ -392,7 +392,7 @@ int32 GPS_DATALOGGER_InitData()
 
     return (iStatus);
 }
-    
+
 /*=====================================================================================
 ** Name: GPS_DATALOGGER_InitApp
 **
@@ -432,7 +432,7 @@ int32 GPS_DATALOGGER_InitData()
 ** Algorithm:
 **    Psuedo-code or description of basic algorithm
 **
-** Author(s):  Jacob Killelea 
+** Author(s):  Jacob Killelea
 **
 ** History:  Date Written  2019-08-29
 **           Unit Tested   yyyy-mm-dd
@@ -450,8 +450,8 @@ int32 GPS_DATALOGGER_InitApp()
         goto GPS_DATALOGGER_InitApp_Exit_Tag;
     }
 
-    if ((GPS_DATALOGGER_InitEvent() != CFE_SUCCESS) || 
-        (GPS_DATALOGGER_InitPipe() != CFE_SUCCESS) || 
+    if ((GPS_DATALOGGER_InitEvent() != CFE_SUCCESS) ||
+        (GPS_DATALOGGER_InitPipe() != CFE_SUCCESS) ||
         (GPS_DATALOGGER_InitData() != CFE_SUCCESS))
     {
         iStatus = -1;
@@ -474,7 +474,7 @@ GPS_DATALOGGER_InitApp_Exit_Tag:
 
     return (iStatus);
 }
-    
+
 /*=====================================================================================
 ** Name: GPS_DATALOGGER_CleanupCallback
 **
@@ -508,7 +508,7 @@ GPS_DATALOGGER_InitApp_Exit_Tag:
 ** Algorithm:
 **    Psuedo-code or description of basic algorithm
 **
-** Author(s):  Jacob Killelea 
+** Author(s):  Jacob Killelea
 **
 ** History:  Date Written  2019-08-29
 **           Unit Tested   yyyy-mm-dd
@@ -518,7 +518,7 @@ void GPS_DATALOGGER_CleanupCallback()
     OS_close(g_GPS_DATALOGGER_AppData.rawDataLogFileId);
     OS_close(g_GPS_DATALOGGER_AppData.filteredDataLogFileId);
 }
-    
+
 /*=====================================================================================
 ** Name: GPS_DATALOGGER_RcvMsg
 **
@@ -528,7 +528,7 @@ void GPS_DATALOGGER_CleanupCallback()
 **    None
 **
 ** Returns:
-**    int32 iStatus - Status of initialization 
+**    int32 iStatus - Status of initialization
 **
 ** Routines Called:
 **    CFE_SB_RcvMsg
@@ -559,7 +559,7 @@ void GPS_DATALOGGER_CleanupCallback()
 ** Algorithm:
 **    Psuedo-code or description of basic algorithm
 **
-** Author(s):  Jacob Killelea 
+** Author(s):  Jacob Killelea
 **
 ** History:  Date Written  2019-08-29
 **           Unit Tested   yyyy-mm-dd
@@ -583,7 +583,7 @@ int32 GPS_DATALOGGER_RcvMsg(int32 iBlocking)
     {
         MsgId = CFE_SB_GetMsgId(MsgPtr);
         switch (MsgId)
-	{
+        {
             case GPS_DATALOGGER_WAKEUP_MID:
                 GPS_DATALOGGER_ProcessNewCmds();
                 GPS_DATALOGGER_ProcessNewData();
@@ -610,13 +610,13 @@ int32 GPS_DATALOGGER_RcvMsg(int32 iBlocking)
         ** Note that a SB read error is not always going to result in an app quitting.
         */
         CFE_EVS_SendEvent(GPS_DATALOGGER_PIPE_ERR_EID, CFE_EVS_ERROR,
-			  "GPS_DATALOGGER: SB pipe read error (0x%08X), app will exit", iStatus);
+            "GPS_DATALOGGER: SB pipe read error (0x%08X), app will exit", iStatus);
         g_GPS_DATALOGGER_AppData.uiRunStatus= CFE_ES_APP_ERROR;
     }
 
     return (iStatus);
 }
-    
+
 /*=====================================================================================
 ** Name: GPS_DATALOGGER_ProcessNewData
 **
@@ -632,6 +632,8 @@ int32 GPS_DATALOGGER_RcvMsg(int32 iBlocking)
 **    CFE_SB_RcvMsg
 **    CFE_SB_GetMsgId
 **    CFE_EVS_SendEvent
+**    OS_write
+**    snprintf
 **
 ** Called By:
 **    GPS_DATALOGGER_RcvMsg
@@ -640,7 +642,9 @@ int32 GPS_DATALOGGER_RcvMsg(int32 iBlocking)
 **    None
 **
 ** Global Outputs/Writes:
-**    None
+**    Writes to filteredDataLogFileId and rawDataLogFileId.
+**    If either of these calls fails to write as many bytes as expected,
+**    g_GPS_DATALOGGER_AppData.uiRunStatus is set to CFE_EVS_ERROR
 **
 ** Limitations, Assumptions, External Events, and Notes:
 **    1. List assumptions that are made that apply to this function.
@@ -652,7 +656,7 @@ int32 GPS_DATALOGGER_RcvMsg(int32 iBlocking)
 ** Algorithm:
 **    Psuedo-code or description of basic algorithm
 **
-** Author(s):  Jacob Killelea 
+** Author(s):  Jacob Killelea
 **
 ** History:  Date Written  2019-08-29
 **           Unit Tested   yyyy-mm-dd
@@ -743,7 +747,7 @@ void GPS_DATALOGGER_ProcessNewData()
         }
     }
 }
-    
+
 /*=====================================================================================
 ** Name: GPS_DATALOGGER_ProcessNewCmds
 **
@@ -781,7 +785,7 @@ void GPS_DATALOGGER_ProcessNewData()
 ** Algorithm:
 **    Psuedo-code or description of basic algorithm
 **
-** Author(s):  Jacob Killelea 
+** Author(s):  Jacob Killelea
 **
 ** History:  Date Written  2019-08-29
 **           Unit Tested   yyyy-mm-dd
@@ -836,7 +840,7 @@ void GPS_DATALOGGER_ProcessNewCmds()
         }
     }
 }
-    
+
 /*=====================================================================================
 ** Name: GPS_DATALOGGER_ProcessNewAppCmds
 **
@@ -872,7 +876,7 @@ void GPS_DATALOGGER_ProcessNewCmds()
 ** Algorithm:
 **    Psuedo-code or description of basic algorithm
 **
-** Author(s):  Jacob Killelea 
+** Author(s):  Jacob Killelea
 **
 ** History:  Date Written  2019-08-29
 **           Unit Tested   yyyy-mm-dd
@@ -909,7 +913,7 @@ void GPS_DATALOGGER_ProcessNewAppCmds(CFE_SB_Msg_t* MsgPtr)
         }
     }
 }
-    
+
 /*=====================================================================================
 ** Name: GPS_DATALOGGER_ReportHousekeeping
 **
@@ -955,7 +959,7 @@ void GPS_DATALOGGER_ReportHousekeeping()
     CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&g_GPS_DATALOGGER_AppData.HkTlm);
     CFE_SB_SendMsg((CFE_SB_Msg_t*)&g_GPS_DATALOGGER_AppData.HkTlm);
 }
-    
+
 /*=====================================================================================
 ** Name: GPS_DATALOGGER_SendOutData
 **
@@ -1001,7 +1005,7 @@ void GPS_DATALOGGER_SendOutData()
     CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&g_GPS_DATALOGGER_AppData.OutData);
     CFE_SB_SendMsg((CFE_SB_Msg_t*)&g_GPS_DATALOGGER_AppData.OutData);
 }
-    
+
 /*=====================================================================================
 ** Name: GPS_DATALOGGER_VerifyCmdLength
 **
@@ -1036,7 +1040,7 @@ void GPS_DATALOGGER_SendOutData()
 ** Algorithm:
 **    Psuedo-code or description of basic algorithm
 **
-** Author(s):  Jacob Killelea 
+** Author(s):  Jacob Killelea
 **
 ** History:  Date Written  2019-08-29
 **           Unit Tested   yyyy-mm-dd
@@ -1066,7 +1070,7 @@ boolean GPS_DATALOGGER_VerifyCmdLength(CFE_SB_Msg_t* MsgPtr,
 
     return (bResult);
 }
-    
+
 /*=====================================================================================
 ** Name: GPS_DATALOGGER_AppMain
 **
@@ -1107,7 +1111,7 @@ boolean GPS_DATALOGGER_VerifyCmdLength(CFE_SB_Msg_t* MsgPtr,
 ** Algorithm:
 **    Psuedo-code or description of basic algorithm
 **
-** Author(s):  Jacob Killelea 
+** Author(s):  Jacob Killelea
 **
 ** History:  Date Written  2019-08-29
 **           Unit Tested   yyyy-mm-dd
@@ -1142,9 +1146,9 @@ void GPS_DATALOGGER_AppMain()
 
     /* Exit the application */
     CFE_ES_ExitApp(g_GPS_DATALOGGER_AppData.uiRunStatus);
-} 
-    
+}
+
 /*=======================================================================================
 ** End of file gps_datalogger_app.c
 **=====================================================================================*/
-    
+
