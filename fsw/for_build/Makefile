@@ -88,7 +88,8 @@ INCLUDE_PATH = -I$(OSAL_SRC)/inc \
                -I$(CFS_MISSION_INC) \
                -I../cfe/inc \
                -I../inc \
-               -I$(CFS_APP_SRC)/gps_kalman/fsw/src
+               -I$(CFS_APP_SRC)/gps_kalman/fsw/src \
+               -I$(CFS_APP_SRC)/gps_reader/fsw/src/libnmea/include
 
 #
 # Define the VPATH make variable. 
