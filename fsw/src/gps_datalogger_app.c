@@ -44,6 +44,7 @@
 #include "gps_datalogger_platform_cfg.h"
 #include "gps_datalogger_mission_cfg.h"
 #include "gps_datalogger_app.h"
+#include "gps_reader_msgs.h"
 #include "gps_reader_msgids.h"
 #include "gps_kalman_msgids.h"
 #include "gps_kalman_msg.h"
@@ -663,6 +664,8 @@ void GPS_DATALOGGER_ProcessNewData()
     CFE_SB_MsgId_t  TlmMsgId;
 
     char LogDataBuffer[256];
+    int32 nbytes_to_write = 0;
+    int32 nbytes_written = 0;
 
     /* Process telemetry messages till the pipe is empty */
     while (1)
@@ -679,15 +682,46 @@ void GPS_DATALOGGER_ProcessNewData()
                                       "GPS_DATALOGGER - Recvd GPS_KALMAN data");
 
                     GPS_KALMAN_OutData_t *kalmanData = (GPS_KALMAN_OutData_t *) TlmMsgPtr;
-                    int32 nbytes = snprintf(LogDataBuffer, sizeof(LogDataBuffer), "%lf,%lf\n",
-                                        kalmanData->filterLat,
-                                        kalmanData->filterLon);
-                    OS_write(g_GPS_DATALOGGER_AppData.filteredDataLogFileId, LogDataBuffer, nbytes);
+                    nbytes_to_write = snprintf(LogDataBuffer, sizeof(LogDataBuffer),
+                            "%lf,%lf\n",
+                            kalmanData->filterLat,
+                            kalmanData->filterLon);
+
+                    nbytes_written = OS_write(
+                            g_GPS_DATALOGGER_AppData.filteredDataLogFileId,
+                            LogDataBuffer,
+                            nbytes_to_write);
+
+                    if (nbytes_written != nbytes_to_write) {
+                        CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
+                                  "Didn't write as many bytes as expected (%d of %d)",
+                                  nbytes_written, nbytes_to_write);
+                        g_GPS_DATALOGGER_AppData.uiRunStatus = CFE_EVS_ERROR;
+                    }
                     break;
 
                 case GPS_READER_GPS_INFO_MSG:
                     CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_INFORMATION,
                                       "GPS_DATALOGGER - Recvd GPS_READER data");
+
+                    GpsInfoMsg_t *rawData = (GpsInfoMsg_t *) TlmMsgPtr;
+
+                    nbytes_to_write = snprintf(LogDataBuffer, sizeof(LogDataBuffer),
+                            "%lf,%lf\n",
+                            rawData->gpsInfo.lat,
+                            rawData->gpsInfo.lon);
+
+                    nbytes_written = OS_write(
+                            g_GPS_DATALOGGER_AppData.rawDataLogFileId,
+                            LogDataBuffer,
+                            nbytes_to_write);
+
+                    if (nbytes_written != nbytes_to_write) {
+                        CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
+                                  "Didn't write as many bytes as expected (%d of %d)",
+                                  nbytes_written, nbytes_to_write);
+                        g_GPS_DATALOGGER_AppData.uiRunStatus = CFE_EVS_ERROR;
+                    }
                     break;
 
                 default:
