@@ -343,7 +343,7 @@ GPS_DATALOGGER_InitPipe_Exit_Tag:
 **=====================================================================================*/
 int32 GPS_DATALOGGER_InitData()
 {
-    int32  iStatus=CFE_SUCCESS;
+    int32 iStatus = CFE_SUCCESS;
 
     /* Init input data */
     memset((void*)&g_GPS_DATALOGGER_AppData.InData, 0x00, sizeof(g_GPS_DATALOGGER_AppData.InData));
@@ -385,10 +385,10 @@ int32 GPS_DATALOGGER_InitData()
     }
 
     /* Write headers */
-    OS_write(g_GPS_DATALOGGER_AppData.rawDataLogFileId, "lattitude,longitude\n",
-            sizeof("lattitude,longitude\n"));
-    OS_write(g_GPS_DATALOGGER_AppData.filteredDataLogFileId, "lattitude,longitude\n",
-            sizeof("lattitude,longitude\n"));
+    OS_write(g_GPS_DATALOGGER_AppData.rawDataLogFileId, "lattitude,longitude,speed,hdg\n",
+            sizeof("lattitude,longitude,speed,hdg\n"));
+    OS_write(g_GPS_DATALOGGER_AppData.filteredDataLogFileId, "lattitude,longitude,speed,hdg\n",
+            sizeof("lattitude,longitude,speed,hdg\n"));
 
     return (iStatus);
 }
@@ -687,9 +687,12 @@ void GPS_DATALOGGER_ProcessNewData()
 
                     GPS_KALMAN_OutData_t *kalmanData = (GPS_KALMAN_OutData_t *) TlmMsgPtr;
                     nbytes_to_write = snprintf(LogDataBuffer, sizeof(LogDataBuffer),
-                            "%lf,%lf\n",
+                            /* lat,lon,spd,hdg */
+                            "%lf,%lf,%lf,%lf\n",
                             kalmanData->filterLat,
-                            kalmanData->filterLon);
+                            kalmanData->filterLon,
+                            kalmanData->filterVel,
+                            kalmanData->filterHdg);
 
                     nbytes_written = OS_write(
                             g_GPS_DATALOGGER_AppData.filteredDataLogFileId,
@@ -711,9 +714,12 @@ void GPS_DATALOGGER_ProcessNewData()
                     GpsInfoMsg_t *rawData = (GpsInfoMsg_t *) TlmMsgPtr;
 
                     nbytes_to_write = snprintf(LogDataBuffer, sizeof(LogDataBuffer),
-                            "%lf,%lf\n",
+                            /* lat,lon,spd,hdg */
+                            "%lf,%lf,%lf,%lf\n",
                             rawData->gpsInfo.lat,
-                            rawData->gpsInfo.lon);
+                            rawData->gpsInfo.lon,
+                            rawData->gpsInfo.speed,
+                            rawData->gpsInfo.direction);
 
                     nbytes_written = OS_write(
                             g_GPS_DATALOGGER_AppData.rawDataLogFileId,
