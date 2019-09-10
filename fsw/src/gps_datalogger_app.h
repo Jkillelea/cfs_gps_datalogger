@@ -87,8 +87,8 @@ typedef struct
     GPS_DATALOGGER_HkTlm_t  HkTlm;
 
     /* TODO:  Add declarations for additional private data here */
-    int32 rawDataLogFileId;
-    int32 filteredDataLogFileId;
+    int32 RawDataLogFileId;
+    int32 FilteredDataLogFileId;
 } GPS_DATALOGGER_AppData_t;
 
 /*

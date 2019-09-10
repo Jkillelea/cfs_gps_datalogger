@@ -359,35 +359,35 @@ int32 GPS_DATALOGGER_InitData()
                    GPS_DATALOGGER_HK_TLM_MID, sizeof(g_GPS_DATALOGGER_AppData.HkTlm), TRUE);
 
     /* Init logfiles */
-    g_GPS_DATALOGGER_AppData.rawDataLogFileId = OS_open("/cf/raw_gps_log",
+    g_GPS_DATALOGGER_AppData.RawDataLogFileId = OS_open("/cf/raw_gps_log",
         OS_WRITE_ONLY,
         S_IWUSR | S_IRUSR);
 
-    if (g_GPS_DATALOGGER_AppData.rawDataLogFileId < 0 )
+    if (g_GPS_DATALOGGER_AppData.RawDataLogFileId < 0 )
     {
         CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
             "Failed to open raw_gps_log (%d)",
-            g_GPS_DATALOGGER_AppData.rawDataLogFileId);
+            g_GPS_DATALOGGER_AppData.RawDataLogFileId);
 
         iStatus = CFE_ES_APP_ERROR;
     }
 
-    g_GPS_DATALOGGER_AppData.filteredDataLogFileId = OS_open("/cf/filter_gps_log",
+    g_GPS_DATALOGGER_AppData.FilteredDataLogFileId = OS_open("/cf/filter_gps_log",
         OS_WRITE_ONLY,
         S_IWUSR | S_IRUSR);
-    if (g_GPS_DATALOGGER_AppData.filteredDataLogFileId < 0 )
+    if (g_GPS_DATALOGGER_AppData.FilteredDataLogFileId < 0 )
     {
         CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
             "Failed to open filter_gps_log (%d)",
-            g_GPS_DATALOGGER_AppData.filteredDataLogFileId);
+            g_GPS_DATALOGGER_AppData.FilteredDataLogFileId);
 
         iStatus = CFE_ES_APP_ERROR;
     }
 
     /* Write headers */
-    OS_write(g_GPS_DATALOGGER_AppData.rawDataLogFileId, "lattitude,longitude,speed,hdg\n",
+    OS_write(g_GPS_DATALOGGER_AppData.RawDataLogFileId, "lattitude,longitude,speed,hdg\n",
             sizeof("lattitude,longitude,speed,hdg\n"));
-    OS_write(g_GPS_DATALOGGER_AppData.filteredDataLogFileId, "lattitude,longitude,speed,hdg\n",
+    OS_write(g_GPS_DATALOGGER_AppData.FilteredDataLogFileId, "lattitude,longitude,speed,hdg\n",
             sizeof("lattitude,longitude,speed,hdg\n"));
 
     return (iStatus);
@@ -515,8 +515,8 @@ GPS_DATALOGGER_InitApp_Exit_Tag:
 **=====================================================================================*/
 void GPS_DATALOGGER_CleanupCallback()
 {
-    OS_close(g_GPS_DATALOGGER_AppData.rawDataLogFileId);
-    OS_close(g_GPS_DATALOGGER_AppData.filteredDataLogFileId);
+    OS_close(g_GPS_DATALOGGER_AppData.RawDataLogFileId);
+    OS_close(g_GPS_DATALOGGER_AppData.FilteredDataLogFileId);
 }
 
 /*=====================================================================================
@@ -642,7 +642,7 @@ int32 GPS_DATALOGGER_RcvMsg(int32 iBlocking)
 **    None
 **
 ** Global Outputs/Writes:
-**    Writes to filteredDataLogFileId and rawDataLogFileId.
+**    Writes to FilteredDataLogFileId and RawDataLogFileId.
 **    If either of these calls fails to write as many bytes as expected,
 **    g_GPS_DATALOGGER_AppData.uiRunStatus is set to CFE_EVS_ERROR
 **
@@ -694,10 +694,9 @@ void GPS_DATALOGGER_ProcessNewData()
                             kalmanData->filterVel,
                             kalmanData->filterHdg);
 
-                    nbytes_written = OS_write(
-                            g_GPS_DATALOGGER_AppData.filteredDataLogFileId,
-                            LogDataBuffer,
-                            nbytes_to_write);
+                    nbytes_written = OS_write(g_GPS_DATALOGGER_AppData.FilteredDataLogFileId,
+                                              LogDataBuffer,
+                                              nbytes_to_write);
 
                     if (nbytes_written != nbytes_to_write) {
                         CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
@@ -721,10 +720,9 @@ void GPS_DATALOGGER_ProcessNewData()
                             rawData->gpsInfo.speed,
                             rawData->gpsInfo.direction);
 
-                    nbytes_written = OS_write(
-                            g_GPS_DATALOGGER_AppData.rawDataLogFileId,
-                            LogDataBuffer,
-                            nbytes_to_write);
+                    nbytes_written = OS_write(g_GPS_DATALOGGER_AppData.RawDataLogFileId,
+                                              LogDataBuffer,
+                                              nbytes_to_write);
 
                     if (nbytes_written != nbytes_to_write) {
                         CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
