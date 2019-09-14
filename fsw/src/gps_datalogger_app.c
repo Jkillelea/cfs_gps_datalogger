@@ -344,6 +344,8 @@ GPS_DATALOGGER_InitPipe_Exit_Tag:
 int32 GPS_DATALOGGER_InitData()
 {
     int32 iStatus = CFE_SUCCESS;
+    char raw_gps_log_path[512];
+    char filter_gps_log_path[512];
 
     /* Init input data */
     memset((void*)&g_GPS_DATALOGGER_AppData.InData, 0x00, sizeof(g_GPS_DATALOGGER_AppData.InData));
@@ -358,31 +360,65 @@ int32 GPS_DATALOGGER_InitData()
     CFE_SB_InitMsg(&g_GPS_DATALOGGER_AppData.HkTlm,
                    GPS_DATALOGGER_HK_TLM_MID, sizeof(g_GPS_DATALOGGER_AppData.HkTlm), TRUE);
 
-    /* Init logfiles */
-    g_GPS_DATALOGGER_AppData.RawDataLogFileId = OS_open("/cf/raw_gps_log",
-        OS_WRITE_ONLY,
-        S_IWUSR | S_IRUSR);
+    /* Init raw data logfile */
+    iStatus = GPS_DATALOGGER_FindNextLogFileName("/cf/log/raw_gps_log", raw_gps_log_path, 512);
 
-    if (g_GPS_DATALOGGER_AppData.RawDataLogFileId < 0 )
+    /* Found a spot for the next file */
+    if (iStatus == CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
-            "Failed to open raw_gps_log (%d)",
-            g_GPS_DATALOGGER_AppData.RawDataLogFileId);
+            "Next available filename for /cf/log/raw_gps_log is %s!", raw_gps_log_path);
+
+        g_GPS_DATALOGGER_AppData.RawDataLogFileId = OS_open(raw_gps_log_path, OS_WRITE_ONLY,
+                S_IWUSR | S_IRUSR);
+
+        /* Failed to open the file */
+        if (g_GPS_DATALOGGER_AppData.RawDataLogFileId < 0)
+        {
+            CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR, "Failed to open raw_gps_log (%d)",
+                g_GPS_DATALOGGER_AppData.RawDataLogFileId);
+
+            iStatus = CFE_ES_APP_ERROR;
+        }
+    }
+    else /* Did not find a spot for the next file */
+    {
+        CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
+            "Failed to find the next available filename for /cf/log/raw_gps_log!");
 
         iStatus = CFE_ES_APP_ERROR;
     }
 
-    g_GPS_DATALOGGER_AppData.FilteredDataLogFileId = OS_open("/cf/filter_gps_log",
-        OS_WRITE_ONLY,
-        S_IWUSR | S_IRUSR);
-    if (g_GPS_DATALOGGER_AppData.FilteredDataLogFileId < 0 )
+    /* Init filtered data logfile */
+    iStatus = GPS_DATALOGGER_FindNextLogFileName("/cf/log/filter_gps_log", filter_gps_log_path, 512);
+
+    /* Found a spot for the next file */
+    if (iStatus == CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
-            "Failed to open filter_gps_log (%d)",
-            g_GPS_DATALOGGER_AppData.FilteredDataLogFileId);
+            "Next available filename for /cf/log/filter_gps_log is %s!", filter_gps_log_path);
+
+        g_GPS_DATALOGGER_AppData.FilteredDataLogFileId = OS_open(filter_gps_log_path, OS_WRITE_ONLY,
+            S_IWUSR | S_IRUSR);
+
+        /* Failed to open the file */
+        if (g_GPS_DATALOGGER_AppData.FilteredDataLogFileId < 0)
+        {
+            CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
+                "Failed to open filter_gps_log (%d)",
+                g_GPS_DATALOGGER_AppData.FilteredDataLogFileId);
+
+            iStatus = CFE_ES_APP_ERROR;
+        }
+    }
+    else /* Did not find a spot for the next file */
+    {
+        CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
+            "Failed to find the next available filename for /cf/filter_gps_log!");
 
         iStatus = CFE_ES_APP_ERROR;
     }
+
 
     /* Write headers */
     OS_write(g_GPS_DATALOGGER_AppData.RawDataLogFileId, "lattitude,longitude,speed,hdg\n",
@@ -1156,3 +1192,70 @@ void GPS_DATALOGGER_AppMain()
 ** End of file gps_datalogger_app.c
 **=====================================================================================*/
 
+
+
+
+
+
+/*=====================================================================================
+** Name: GPS_DATALOGGER_FindNextLogFileName
+**
+** Purpose: Find the next available logfile name. Example: rawdata0, rawdata1...
+**
+** Arguments:
+**    None
+**
+** Returns:
+**    None
+**
+** Routines Called:
+**    OS_opendir
+**    OS_readdir
+**
+**
+** Called By:
+**    GPS_DATALOGGER_InitData
+**
+** Global Inputs/Reads:
+**    Searches the root filesystem
+**
+** Global Outputs/Writes:
+**
+** Limitations, Assumptions, External Events, and Notes:
+**    1. The filesystem is readable
+**
+** Algorithm:
+**    Searches for the the maximum N of files named 'filePredicateN'. Returns 'filePredicate(N+1)'
+**    If no file matching the predicate is found, returns 'filePredicate0'
+**
+** Author(s):  Jacob Killelea
+**
+** History:  Date Written  2019-08-29
+**           Unit Tested   yyyy-mm-dd
+**=====================================================================================*/
+int32 GPS_DATALOGGER_FindNextLogFileName(const char *filePredicate, char *nextAvailableName,
+        uint32 nextAvailableNameLength)
+{
+    int32 iStatus = CFE_SUCCESS;
+    uint32 i;
+    os_fstat_t fileStatus;
+
+    for (i = 0; i <= 9999; i++) {
+        snprintf(nextAvailableName, nextAvailableNameLength, "%s%d", filePredicate, i);
+        
+        /* Not Found */
+        if (OS_stat(nextAvailableName, &fileStatus) != OS_FS_SUCCESS)
+        {
+            break;
+        }
+    }
+
+    /* All names taken */
+    if (i == 9999)
+    {
+        iStatus = CFE_ES_APP_ERROR;
+    }
+
+
+    return(iStatus);
+}
