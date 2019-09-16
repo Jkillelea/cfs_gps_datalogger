@@ -126,6 +126,10 @@ void  GPS_DATALOGGER_SendOutData(void);
 
 boolean  GPS_DATALOGGER_VerifyCmdLength(CFE_SB_Msg_t*, uint16);
 
+int32 GPS_DATALOGGER_FindNextLogFileName(const char *filePredicate,
+        char *nextAvailableName,
+        uint32 nextAvailableNameLength);
+
 #endif /* _GPS_DATALOGGER_APP_H_ */
 
 /*=======================================================================================
