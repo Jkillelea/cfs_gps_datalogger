@@ -4,9 +4,9 @@ project(GPS_DATALOGGER C)
 include_directories(fsw/mission_inc)
 include_directories(fsw/platform_inc)
 include_directories(${gps_reader_MISSION_DIR}/fsw/platform_inc)
-include_directories(${gps_reader_MISSION_DIR}/fsw/src/libnmea/include)
 include_directories(${gps_kalman_MISSION_DIR}/fsw/platform_inc)
 include_directories(${gps_kalman_MISSION_DIR}/fsw/src)
+include_directories(${libnmea_MISSION_DIR}/include)
 
 aux_source_directory(fsw/src APP_SRC_FILES)
 
