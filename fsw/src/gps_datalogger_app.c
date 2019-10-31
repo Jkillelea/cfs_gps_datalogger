@@ -360,10 +360,20 @@ int32 GPS_DATALOGGER_InitData()
     CFE_SB_InitMsg(&g_GPS_DATALOGGER_AppData.HkTlm,
                    GPS_DATALOGGER_HK_TLM_MID, sizeof(g_GPS_DATALOGGER_AppData.HkTlm), TRUE);
 
-    iStatus = OS_mkdir("/cf/log/", 0777);
+    /* Second arg is unused in posix impl */
+    iStatus = OS_mkdir("/cf/log/", 0);
     if (iStatus != CFE_SUCCESS)
     {
         CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR, "Failed to open /cf/log/!");
+        return (iStatus);
+    }
+
+    /* Set Permissions. */
+    if (OS_chmod("/cf/log", OS_READ_WRITE) != OS_FS_SUCCESS) {
+        CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
+                "Failed to chmod %s", "/cf/log");
+
+        iStatus = CFE_ES_APP_ERROR;
         return (iStatus);
     }
 
@@ -381,13 +391,22 @@ int32 GPS_DATALOGGER_InitData()
     CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_INFORMATION,
         "Next available filename for /cf/log/raw_gps_log is %s!", raw_gps_log_path);
 
-    g_GPS_DATALOGGER_AppData.RawDataLogFileId = OS_open(raw_gps_log_path, OS_WRITE_ONLY, 0666);
+    g_GPS_DATALOGGER_AppData.RawDataLogFileId = OS_creat(raw_gps_log_path, OS_READ_WRITE);
 
     /* Failed to open the file */
     if (g_GPS_DATALOGGER_AppData.RawDataLogFileId < 0)
     {
         CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR, "Failed to open %s (%d)",
             raw_gps_log_path, g_GPS_DATALOGGER_AppData.RawDataLogFileId);
+
+        iStatus = CFE_ES_APP_ERROR;
+        return (iStatus);
+    }
+
+    /* Set Permissions. */
+    if (OS_chmod(raw_gps_log_path, OS_READ_WRITE) != OS_FS_SUCCESS) {
+        CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
+                "Failed to chmod %s", raw_gps_log_path);
 
         iStatus = CFE_ES_APP_ERROR;
         return (iStatus);
@@ -400,14 +419,13 @@ int32 GPS_DATALOGGER_InitData()
     {
         CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_INFORMATION,
             "Failed to find the next available filename for /cf/log/filter_gps_log!");
-
         return (iStatus);
     }
 
     CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
         "Next available filename for /cf/log/filter_gps_log is %s!", filter_gps_log_path);
 
-    g_GPS_DATALOGGER_AppData.FilteredDataLogFileId = OS_open(filter_gps_log_path, OS_WRITE_ONLY, 0666);
+    g_GPS_DATALOGGER_AppData.FilteredDataLogFileId = OS_creat(filter_gps_log_path, OS_WRITE_ONLY);
 
     /* Failed to open the file */
     if (g_GPS_DATALOGGER_AppData.FilteredDataLogFileId < 0)
@@ -415,6 +433,15 @@ int32 GPS_DATALOGGER_InitData()
         CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
             "Failed to open %s (%d)",
             filter_gps_log_path, g_GPS_DATALOGGER_AppData.FilteredDataLogFileId);
+
+        iStatus = CFE_ES_APP_ERROR;
+        return (iStatus);
+    }
+
+    /* Set Permissions. */
+    if (OS_chmod(filter_gps_log_path, OS_READ_WRITE) != OS_FS_SUCCESS) {
+        CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
+                "Failed to chmod %s", filter_gps_log_path);
 
         iStatus = CFE_ES_APP_ERROR;
         return (iStatus);
@@ -1209,7 +1236,7 @@ void GPS_DATALOGGER_AppMain()
 **    None
 **
 ** Routines Called:
-**    OS_opendir
+**    OS_creat
 **    OS_readdir
 **
 **
@@ -1242,7 +1269,7 @@ int32 GPS_DATALOGGER_FindNextLogFileName(const char *filePredicate, char *nextAv
 
     for (i = 0; i <= 9999; i++) {
         snprintf(nextAvailableName, nextAvailableNameLength, "%s%d", filePredicate, i);
-        
+
         /* Not Found */
         if (OS_stat(nextAvailableName, &fileStatus) != OS_FS_SUCCESS)
         {
