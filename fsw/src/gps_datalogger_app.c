@@ -360,65 +360,65 @@ int32 GPS_DATALOGGER_InitData()
     CFE_SB_InitMsg(&g_GPS_DATALOGGER_AppData.HkTlm,
                    GPS_DATALOGGER_HK_TLM_MID, sizeof(g_GPS_DATALOGGER_AppData.HkTlm), TRUE);
 
+    iStatus = OS_mkdir("/cf/log/", 0777);
+    if (iStatus != CFE_SUCCESS)
+    {
+        CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR, "Failed to open /cf/log/!");
+        return (iStatus);
+    }
+
     /* Init raw data logfile */
     iStatus = GPS_DATALOGGER_FindNextLogFileName("/cf/log/raw_gps_log", raw_gps_log_path, 512);
 
-    /* Found a spot for the next file */
-    if (iStatus == CFE_SUCCESS)
+    if (iStatus != CFE_SUCCESS)
     {
-        CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
-            "Next available filename for /cf/log/raw_gps_log is %s!", raw_gps_log_path);
-
-        g_GPS_DATALOGGER_AppData.RawDataLogFileId = OS_open(raw_gps_log_path, OS_WRITE_ONLY,
-                S_IWUSR | S_IRUSR);
-
-        /* Failed to open the file */
-        if (g_GPS_DATALOGGER_AppData.RawDataLogFileId < 0)
-        {
-            CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR, "Failed to open raw_gps_log (%d)",
-                g_GPS_DATALOGGER_AppData.RawDataLogFileId);
-
-            iStatus = CFE_ES_APP_ERROR;
-        }
-    }
-    else /* Did not find a spot for the next file */
-    {
-        CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
+        CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_INFORMATION,
             "Failed to find the next available filename for /cf/log/raw_gps_log!");
 
+        return (iStatus);
+    }
+
+    CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_INFORMATION,
+        "Next available filename for /cf/log/raw_gps_log is %s!", raw_gps_log_path);
+
+    g_GPS_DATALOGGER_AppData.RawDataLogFileId = OS_open(raw_gps_log_path, OS_WRITE_ONLY, 0666);
+
+    /* Failed to open the file */
+    if (g_GPS_DATALOGGER_AppData.RawDataLogFileId < 0)
+    {
+        CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR, "Failed to open %s (%d)",
+            raw_gps_log_path, g_GPS_DATALOGGER_AppData.RawDataLogFileId);
+
         iStatus = CFE_ES_APP_ERROR;
+        return (iStatus);
     }
 
     /* Init filtered data logfile */
     iStatus = GPS_DATALOGGER_FindNextLogFileName("/cf/log/filter_gps_log", filter_gps_log_path, 512);
 
-    /* Found a spot for the next file */
-    if (iStatus == CFE_SUCCESS)
+    if (iStatus != CFE_SUCCESS)
     {
-        CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
-            "Next available filename for /cf/log/filter_gps_log is %s!", filter_gps_log_path);
+        CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_INFORMATION,
+            "Failed to find the next available filename for /cf/log/filter_gps_log!");
 
-        g_GPS_DATALOGGER_AppData.FilteredDataLogFileId = OS_open(filter_gps_log_path, OS_WRITE_ONLY,
-            S_IWUSR | S_IRUSR);
-
-        /* Failed to open the file */
-        if (g_GPS_DATALOGGER_AppData.FilteredDataLogFileId < 0)
-        {
-            CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
-                "Failed to open filter_gps_log (%d)",
-                g_GPS_DATALOGGER_AppData.FilteredDataLogFileId);
-
-            iStatus = CFE_ES_APP_ERROR;
-        }
+        return (iStatus);
     }
-    else /* Did not find a spot for the next file */
+
+    CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
+        "Next available filename for /cf/log/filter_gps_log is %s!", filter_gps_log_path);
+
+    g_GPS_DATALOGGER_AppData.FilteredDataLogFileId = OS_open(filter_gps_log_path, OS_WRITE_ONLY, 0666);
+
+    /* Failed to open the file */
+    if (g_GPS_DATALOGGER_AppData.FilteredDataLogFileId < 0)
     {
         CFE_EVS_SendEvent(GPS_DATALOGGER_INF_EID, CFE_EVS_ERROR,
-            "Failed to find the next available filename for /cf/filter_gps_log!");
+            "Failed to open %s (%d)",
+            filter_gps_log_path, g_GPS_DATALOGGER_AppData.FilteredDataLogFileId);
 
         iStatus = CFE_ES_APP_ERROR;
+        return (iStatus);
     }
-
 
     /* Write headers */
     OS_write(g_GPS_DATALOGGER_AppData.RawDataLogFileId, "lattitude,longitude,speed,hdg\n",
@@ -1255,7 +1255,6 @@ int32 GPS_DATALOGGER_FindNextLogFileName(const char *filePredicate, char *nextAv
     {
         iStatus = CFE_ES_APP_ERROR;
     }
-
 
     return(iStatus);
 }
