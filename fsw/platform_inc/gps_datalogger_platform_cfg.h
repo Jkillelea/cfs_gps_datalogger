@@ -29,6 +29,7 @@
 
 
 /* TODO:  Add more platform configuration parameter definitions here, if necessary. */
+#define GPS_DATALOGGER_MAX_LOGFILE_NUMBER 9999
 
 #endif /* _GPS_DATALOGGER_PLATFORM_CFG_H_ */
 

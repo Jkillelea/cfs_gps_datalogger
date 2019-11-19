@@ -1238,6 +1238,7 @@ void GPS_DATALOGGER_AppMain()
 ** Routines Called:
 **    OS_creat
 **    OS_readdir
+**    OS_stat
 **
 **
 ** Called By:
@@ -1267,7 +1268,7 @@ int32 GPS_DATALOGGER_FindNextLogFileName(const char *filePredicate, char *nextAv
     uint32 i;
     os_fstat_t fileStatus;
 
-    for (i = 0; i <= 9999; i++) {
+    for (i = 0; i <= GPS_DATALOGGER_MAX_LOGFILE_NUMBER; i++) {
         snprintf(nextAvailableName, nextAvailableNameLength, "%s%d", filePredicate, i);
 
         /* Not Found */
@@ -1278,7 +1279,7 @@ int32 GPS_DATALOGGER_FindNextLogFileName(const char *filePredicate, char *nextAv
     }
 
     /* All names taken */
-    if (i == 9999)
+    if (i == GPS_DATALOGGER_MAX_LOGFILE_NUMBER)
     {
         iStatus = CFE_ES_APP_ERROR;
     }
