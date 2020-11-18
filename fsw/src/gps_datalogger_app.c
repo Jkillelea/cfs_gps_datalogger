@@ -522,7 +522,7 @@ int32 GPS_DATALOGGER_InitApp()
     }
 
     /* Install the cleanup callback */
-    OS_TaskInstallDeleteHandler((void*)&GPS_DATALOGGER_CleanupCallback);
+    OS_TaskInstallDeleteHandler(GPS_DATALOGGER_CleanupCallback);
 
 GPS_DATALOGGER_InitApp_Exit_Tag:
     if (iStatus == CFE_SUCCESS)
